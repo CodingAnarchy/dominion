@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
   {
     memset(server_reply, 0, sizeof(server_reply));
     printf("Enter message: ");
-    scanf("%s", message);
+    fgets(message, sizeof(message), stdin);
 
     //Send some data
     if(send(sock, message, strlen(message), 0) < 0)
@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
       return 1;
     }
 
+    // Format and output server reply
+    server_reply[strcspn(server_reply, "\r\n")] = 0;
     puts("Server reply: ");
     puts(server_reply);
   }
