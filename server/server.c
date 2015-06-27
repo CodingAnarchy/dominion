@@ -133,7 +133,7 @@ void *connection_handler(void *socket_desc)
   //Receive a message from the client
   while( (read_size = recv(sock, client_message, 2000, 0)) > 0)
   {
-    message = (char *)malloc(300);
+    message = (char *)malloc(300);  // Reset message to prevent segmentation fault
     // Lookup domain name and send message back to client
     client_message[strcspn(client_message, "\r\n")] = 0;
     rec = ip_lookup(client_message);
