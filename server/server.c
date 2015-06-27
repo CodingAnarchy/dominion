@@ -134,13 +134,13 @@ void *connection_handler(void *socket_desc)
   while( (read_size = recv(sock, client_message, 2000, 0)) > 0)
   {
     message = (char *)malloc(300);
-    // Send the message back to the client
-    // write(sock, client_message, strlen(client_message));
-    printf(client_message);
+    // Lookup domain name and send message back to client
+    client_message[strcspn(client_message, "\r\n")] = 0;
     rec = ip_lookup(client_message);
+    printf(rec->domain);
     if(rec == NULL)
     {
-       message = "Could not find domain name ";
+       strcpy(message, "Could not find domain name ");
        strcat(message, client_message);
        strcat(message, "!");
        printf(message);
@@ -148,11 +148,10 @@ void *connection_handler(void *socket_desc)
     else
     {
       ip_addr.s_addr = rec->ip;
-      message = inet_ntoa(ip_addr);
-      printf(message);
+      strcpy(message, inet_ntoa(ip_addr));
     }
     write(sock, message, strlen(message));
-    memset(client_message, '\0', sizeof(client_message));
+    memset(client_message, 0, sizeof(client_message));
   }
 
   if(read_size == 0)
