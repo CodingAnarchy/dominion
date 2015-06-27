@@ -1,4 +1,6 @@
 export CC=gcc
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+export INC=-I $(ROOT_DIR)/lib
 
 all: client server
 

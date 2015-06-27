@@ -1,5 +1,5 @@
 /*
-  Basic C socket server
+  Server to lookup domain names in hash table
 */
 
 #include <stdio.h>
@@ -9,6 +9,43 @@
 #include <arpa/inet.h>  //inet_addr
 #include <unistd.h>   //write
 #include <pthread.h>  //for threading, link with lpthread
+#include "uthash.h"   // hash table implementation
+
+struct record {
+  char domain[255]; /* key */
+  in_addr_t ip;
+  UT_hash_handle hh;  /* makes structure hashable */
+};
+
+struct record *records = NULL;
+
+void add_record(char *domain_name, in_addr_t ip_addr)
+{
+  struct record *r;
+
+  HASH_FIND_STR(records, domain_name, r); // domain already in hash?
+  if(r == NULL)
+  {
+    r = (struct record*)malloc(sizeof(struct record));
+    strcpy(r->domain, domain_name);
+    HASH_ADD_STR(records, domain, r); // domain: name of key field
+  }
+  r->ip = ip_addr;
+}
+
+struct record *ip_lookup(char *domain_name)
+{
+  struct record *r;
+
+  HASH_FIND_STR(records, domain_name, r); // r: output pointer
+  return r;
+}
+
+void delete_record(struct record *r)
+{
+  HASH_DEL(records, r);  // r: pointer to delete
+  free(r);
+}
 
 //the thread function
 void *connection_handler(void *);
@@ -18,6 +55,11 @@ int main(int argc, char *argv[])
   int socket_desc, client_sock, c, *new_sock;
   struct sockaddr_in server, client;
   char client_message[2000];
+
+  // Add initial records to hash (for testing)
+  add_record("www.google.com", inet_addr("74.125.224.72"));
+  add_record("www.facebook.com", inet_addr("69.63.176.13"));
+  add_record("example.com", inet_addr("93.184.216.119"));
 
   //Create socket
   socket_desc = socket(AF_INET, SOCK_STREAM, 0);
@@ -84,17 +126,29 @@ void *connection_handler(void *socket_desc)
   //Get the socket descriptor
   int sock = *(int*)socket_desc;
   int read_size;
-  char *message, client_message[2000];
-
-  //Send some messages to the client
-  message = "Greetings! I am your connection handler\n";
-  write(sock, message, strlen(message));
+  char *message, client_message[2000], ip_addr[INET_ADDRSTRLEN];
+  struct record *rec;
 
   //Receive a message from the client
   while( (read_size = recv(sock, client_message, 2000, 0)) > 0)
   {
     // Send the message back to the client
-    write(sock, client_message, strlen(client_message));
+    // write(sock, client_message, strlen(client_message));
+    rec = ip_lookup(client_message);
+    if(rec == NULL)
+    {
+       message = "Could not find domain name ";
+       strcat(message, client_message);
+       strcat(message, "!");
+       write(sock, message, strlen(message));
+       message = NULL;
+    }
+    else
+    {
+      inet_ntop(AF_INET, &rec, ip_addr, INET_ADDRSTRLEN);
+      write(sock, ip_addr, strlen(ip_addr));
+    }
+
     memset(client_message, 0, sizeof(client_message));
   }
 
@@ -111,6 +165,8 @@ void *connection_handler(void *socket_desc)
   }
 
   free(socket_desc);
+  free(message);
+  free(rec);
   return (void*)0;
 
 }

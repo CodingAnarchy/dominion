@@ -1,5 +1,5 @@
 all: server.c
-	$(CC) -pthread server.c -o server.exe
+	$(CC) -pthread $(INC) server.c -o server.exe
 
 .PHONY: all clean
 
