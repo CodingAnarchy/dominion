@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
   if( bind(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
   {
     //print error message
-    perror("Bind failed.");
+    perror("Bind failed");
     return 1;
   }
   puts("Bind done.");
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
     if(pthread_create(&sniffer_thread, NULL, connection_handler, (void*) new_sock) < 0)
     {
-      perror("Could not create thread.");
+      perror("Could not create thread");
       return 1;
     }
 
@@ -126,30 +126,33 @@ void *connection_handler(void *socket_desc)
   //Get the socket descriptor
   int sock = *(int*)socket_desc;
   int read_size;
-  char *message, client_message[2000], ip_addr[INET_ADDRSTRLEN];
+  char *message, client_message[2000];
   struct record *rec;
+  struct in_addr ip_addr;
 
   //Receive a message from the client
   while( (read_size = recv(sock, client_message, 2000, 0)) > 0)
   {
+    message = (char *)malloc(300);
     // Send the message back to the client
     // write(sock, client_message, strlen(client_message));
+    printf(client_message);
     rec = ip_lookup(client_message);
     if(rec == NULL)
     {
        message = "Could not find domain name ";
        strcat(message, client_message);
        strcat(message, "!");
-       write(sock, message, strlen(message));
-       message = NULL;
+       printf(message);
     }
     else
     {
-      inet_ntop(AF_INET, &rec, ip_addr, INET_ADDRSTRLEN);
-      write(sock, ip_addr, strlen(ip_addr));
+      ip_addr.s_addr = rec->ip;
+      message = inet_ntoa(ip_addr);
+      printf(message);
     }
-
-    memset(client_message, 0, sizeof(client_message));
+    write(sock, message, strlen(message));
+    memset(client_message, '\0', sizeof(client_message));
   }
 
   if(read_size == 0)

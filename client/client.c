@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if(sock == -1)
   {
-    perror("Could not create socket.");
+    perror("Could not create socket");
     return 1;
   }
   puts("Socket created.");
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   //Connect to remote server
   if(connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
   {
-    perror("Connection failed.");
+    perror("Connection failed");
     return 1;
   }
   puts("Connected\n");
