@@ -9,8 +9,11 @@ import(
 )
 
 var domains map[string]net.IP
+var client int
 
-func handleConnection(conn net.Conn) (bool) {
+func handleConnection(conn net.Conn) {
+  loc_client := client
+  client++
   reader := bufio.NewReader(conn)
   writer := bufio.NewWriter(conn)
   var ip string
@@ -18,7 +21,8 @@ func handleConnection(conn net.Conn) (bool) {
   for {
     msg, err := reader.ReadString('\n')
     if err != nil {
-      log.Fatal("Error receieving from client: ", err)
+      log.Println("Error receiving from client", loc_client, ": ", err)
+      return
     }
     msg = strings.TrimSuffix(msg, "\n")
     if addr, ok := domains[msg]; ok {
@@ -33,6 +37,7 @@ func handleConnection(conn net.Conn) (bool) {
 
 func main() {
   fmt.Println("Server starting...")
+  client = 1
   fmt.Println("Creating map of domains to IP addresses...")
   domains = make(map[string]net.IP)
   domains["www.google.com"] = net.ParseIP("74.125.224.72")
@@ -48,7 +53,7 @@ func main() {
     if err != nil {
       log.Fatal("Error accepting connection: ", err)
     }
-    fmt.Println("Connection accepted...")
+    fmt.Println("Connection accepted to client", client, "...")
     go handleConnection(conn)
   }
 }
