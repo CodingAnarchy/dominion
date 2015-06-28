@@ -24,13 +24,14 @@ func main() {
     if err != nil {
       log.Fatal("Error writing to connection: ", err)
     }
+    server_writer.Flush()
 
     reply, err := server_reply.ReadString('\n')
     if err != nil {
       conn.Close()
       log.Fatal("Error getting server response: ", err)
     }
-    fmt.Println(reply)
+    fmt.Print(reply)
 
   }
 }

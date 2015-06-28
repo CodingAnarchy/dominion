@@ -16,8 +16,8 @@ func handleConnection(conn net.Conn) (bool) {
     if err != nil {
       log.Fatal("Error receieving from client: ", err)
     }
-    fmt.Println(msg)
     writer.WriteString(msg)
+    writer.Flush()
   }
 }
 
