@@ -2,7 +2,6 @@ package kademlia
 
 import (
   "container/list"
-  "exp/iterable"
   "sort"
 )
 
@@ -25,7 +24,7 @@ func (rec *ContactRecord) Less(other interface{}) bool {
 func NewRoutingTable(node *Contact) (ret *RoutingTable) {
   ret = new(RoutingTable)
   for i:= 0; i < IDLength * 8; i++ {
-    ret.buckets[i] = list.New()
+    ret.buckets[i] = []Contact
   }
   ret.node = *node
   return
@@ -34,12 +33,12 @@ func NewRoutingTable(node *Contact) (ret *RoutingTable) {
 func (table *RoutingTable) Update(contact *Contact) {
   prefix_length := contact.id.Xor(table.node.id).PrefixLen()
   bucket := table.buckets[prefix_length]
-  element := iterable.Find(bucket, func(x interface{}) bool {
-    return x.(*Contact).id.Equals(table.node.id)
+  element := sort.Search(bucket.Len(), func(i int) bool {
+    return bucket.At(i).(*Contact).id.Equals(table.node.id)
   })
   if element == nil {
-    if bucket.Len() <= BucketSize {
-      bucket.PushFront(contact)
+    if len(bucket) <= BucketSize {
+      bucket = append(contact, bucket)
     }
     // TODO: Handle insertion when the list is full by evicting old elements
     // if they don't respond to a ping
@@ -48,9 +47,9 @@ func (table *RoutingTable) Update(contact *Contact) {
   }
 }
 
-func copyToSlice(start, end *list.Element, slc []ContactRecord, target NodeID) {
-  for elt := start; elt != end; elt = elt.Next() {
-    contact := elt.Value.(*Contact)
+func copyToSlice(bucket []Contact, slc []ContactRecord, target NodeID) {
+  for i := range bucket {
+    contact := bucket[i]
     slc = append(slc, &ContactRecord{contact, contact.id.Xor(target)})
   }
 }
