@@ -18,18 +18,18 @@ func TestRoutingTable(t *testing.T) {
     return
   }
   if !vec[0].node.id.Equals(n3) {
-    t.Error(vec[0])
+    t.Errorf("Expected %s, returned %s.", n3.String(), vec[0].String())
   }
 
   vec = rt.FindClosest(n2, 10)
   if len(vec) != 2 {
-    t.Error(len(vec))
+    t.Errorf("Returned incorrect number - %d closest nodes.  Expected 2.", len(vec))
     return
   }
   if !vec[0].node.id.Equals(n2) {
-    t.Error(vec[0])
+    t.Errorf("Expected %s, returned %s.", n2.String(), vec[0].String())
   }
   if !vec[1].node.id.Equals(n3) {
-    t.Error(vec[1])
+    t.Errorf("Expected %s, returned %s.", n3.String(), vec[1].String())
   }
 }
