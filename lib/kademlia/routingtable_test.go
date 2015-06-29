@@ -1,6 +1,8 @@
 package kademlia
 
-import "testing"
+import (
+  "testing"
+)
 
 func TestRoutingTable(t *testing.T) {
   n1 := NewNodeID("FFFFFFFF00000000000000000000000000000000");
@@ -12,7 +14,7 @@ func TestRoutingTable(t *testing.T) {
 
   vec := rt.FindClosest(NewNodeID("2222222200000000000000000000000000000000"), 1)
   if len(vec) != 1 {
-    t.Fail()
+    t.Errorf("Returned incorrect number - %d closest nodes.  Expected 1.", len(vec))
     return
   }
   if vec[0].node.id.Equals(n3) {

@@ -33,20 +33,20 @@ func NewRoutingTable(node *Contact) (ret *RoutingTable) {
 func (table *RoutingTable) Update(contact *Contact) {
   prefix_length := contact.id.Xor(table.node.id).PrefixLen()
   bucket := table.buckets[prefix_length]
-  var element *list.Element
-  for elt := bucket.Front(); elt != nil; elt = elt.Next() {
+  var elt *list.Element
+  for elt = bucket.Front(); elt != nil; elt = elt.Next() {
     if elt.Value.(*Contact).id.Equals(table.node.id) {
-      element = elt
+      break
     }
   }
-  if element == nil {
+  if elt == nil {
     if bucket.Len() <= BucketSize {
-      bucket.PushFront(element)
+      bucket.PushFront(contact)
     }
     // TODO: Handle insertion when the list is full by evicting old elements
     // if they don't respond to a ping
   } else {
-    bucket.MoveToFront(element)
+    bucket.MoveToFront(elt)
   }
 }
 
