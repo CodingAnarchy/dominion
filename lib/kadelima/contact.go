@@ -12,3 +12,7 @@ type Contact struct {
 func (contact *Contact) String() string {
   return fmt.Sprintf("Contact(\"%s\", \"%s\")", contact.id, contact.address)
 }
+
+func (contact *Contact) Less(other interface{}) bool {
+  return contact.id.Less(other.(*Contact).id)
+}

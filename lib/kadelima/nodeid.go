@@ -47,7 +47,7 @@ func (node NodeID) Xor(other NodeID) (ret NodeID) {
 func (node NodeID) PrefixLen() (ret int) {
   for i:= 0; i < IDLength; i++ {
     for j:= 0; j < 8; j++ {
-      if (node[i] >> unit8(7-j)) & 0x1 != 0 {
+      if (node[i] >> uint8(7-j)) & 0x1 != 0 {
         return i * 8 + j
       }
     }

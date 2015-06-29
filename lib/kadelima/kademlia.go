@@ -8,6 +8,7 @@ import (
   "net"
   "net/rpc"
   "sort"
+  "errors"
 )
 
 type Kademlia struct {
@@ -43,7 +44,7 @@ func (k *Kademlia) Call(contact *Contact, method string, args, reply interface{}
 }
 
 func (k *Kademlia) sendQuery(node *Contact, target NodeID, done chan []Contact) {
-  args := FindNodeRequest{RPCHeader(&k.routes.node, k.NetworkID), target}
+  args := FindNodeRequest{RPCHeader{&k.routes.node, k.NetworkID}, target}
   reply := FindNodeResponse{}
 
   if err := k.Call(node, "KademliaCore.FindNode", &args, &reply); err == nil {
@@ -55,12 +56,12 @@ func (k *Kademlia) sendQuery(node *Contact, target NodeID, done chan []Contact) 
 
 type ContactHeap []Contact
 
-func (c ContactHeap) Len() int           { return len(h) }
-func (c ContactHeap) Less(i, j int) bool { return c[i] < c[j] }
-func (c ContactHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (c ContactHeap) Len() int           { return len(c) }
+func (c ContactHeap) Less(i, j int) bool { return c[i].Less(c[j]) }
+func (c ContactHeap) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 
 func (c *ContactHeap) Push(x interface{}) {
-  *c =append(*c, x.(*Contact))
+  *c =append(*c, x.(Contact))
 }
 
 func (c *ContactHeap) Pop() interface{} {
@@ -82,8 +83,8 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret []ContactRec
   seen := make(map[string]bool)
 
   // Initialize the return list, frontier heap, and seen list with local nodes
-  for node := range k.routes.FindClosest(target, delta).Iter() {
-    record := node.(*ContactRecord)
+  for _, node := range k.routes.FindClosest(target, delta) {
+    record := node
     ret = append(ret, record)
     heap.Push(frontier, record.node)
     seen[record.node.id.String()] = true
@@ -103,7 +104,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret []ContactRec
     for _, node := range nodes {
       // If we haven't seen the node before, add it
       if _, ok := seen[node.id.String()]; ok == false {
-        ret = append(ret, &ContactRecord{&node, node.id.Xor(target)})
+        ret = append(ret, ContactRecord{&node, node.id.Xor(target)})
         heap.Push(frontier, node)
         seen[node.id.String()] = true
       }
@@ -128,10 +129,10 @@ type RPCHeader struct {
   NetworkID string
 }
 
-func (k *Kadelima) HandleRPC(request, response *RPCHeader) error {
+func (k *Kademlia) HandleRPC(request, response *RPCHeader) error {
   if request.NetworkID != k.NetworkID {
-    return os.NewError(fmt.Sprintf("Expected network ID %s, got %s",
-                                    k.NetworkID, request.NetworkID))
+    return errors.New(fmt.Sprintf("Expected network ID %s, got %s",
+                                   k.NetworkID, request.NetworkID))
   }
   if request.Sender != nil {
     k.routes.Update(request.Sender)
