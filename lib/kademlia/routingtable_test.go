@@ -26,10 +26,10 @@ func TestRoutingTable(t *testing.T) {
     t.Error(len(vec))
     return
   }
-  if vec[0].node.id.Equals(n2) {
+  if !vec[0].node.id.Equals(n2) {
     t.Error(vec[0])
   }
-  if vec[1].node.id.Equals(n3) {
+  if !vec[1].node.id.Equals(n3) {
     t.Error(vec[1])
   }
 }

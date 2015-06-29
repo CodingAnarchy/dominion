@@ -56,7 +56,7 @@ func (table *RoutingTable) FindClosest(target NodeID, count int) (ret ContactRec
   bucket := table.buckets[bucket_num]
   for elt := bucket.Front(); elt != nil; elt = elt.Next() {
     contact := elt.Value.(*Contact)
-    ret = append(ret, ContactRecord{contact, contact.id.Xor(target)})
+    ret = append(ret, &ContactRecord{contact, contact.id.Xor(target)})
   }
 
   for i:= 1; (bucket_num-i >= 0 || bucket_num+i < IDLength * 8) && ret.Len() < count; i++ {
@@ -64,14 +64,14 @@ func (table *RoutingTable) FindClosest(target NodeID, count int) (ret ContactRec
       bucket = table.buckets[bucket_num - i]
       for elt := bucket.Front(); elt != nil; elt = elt.Next() {
         contact := elt.Value.(*Contact)
-        ret = append(ret, ContactRecord{contact, contact.id.Xor(target)})
+        ret = append(ret, &ContactRecord{contact, contact.id.Xor(target)})
       }
     }
     if bucket_num + i < IDLength * 8 {
       bucket = table.buckets[bucket_num + i]
       for elt := bucket.Front(); elt != nil; elt = elt.Next() {
         contact := elt.Value.(*Contact)
-        ret = append(ret, ContactRecord{contact, contact.id.Xor(target)})
+        ret = append(ret, &ContactRecord{contact, contact.id.Xor(target)})
       }
     }
   }

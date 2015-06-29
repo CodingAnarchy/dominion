@@ -72,7 +72,7 @@ func (c *ContactHeap) Pop() interface{} {
   return x
 }
 
-type ContactRecList []ContactRecord
+type ContactRecList []*ContactRecord
 
 func (cr ContactRecList) Len() int            { return len(cr) }
 func (cr ContactRecList) Less(i, j int) bool  { return cr[i].Less(cr[j]) }
@@ -110,7 +110,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
     for _, node := range nodes {
       // If we haven't seen the node before, add it
       if _, ok := seen[node.id.String()]; ok == false {
-        ret = append(ret, ContactRecord{&node, node.id.Xor(target)})
+        ret = append(ret, &ContactRecord{&node, node.id.Xor(target)})
         heap.Push(frontier, node)
         seen[node.id.String()] = true
       }
