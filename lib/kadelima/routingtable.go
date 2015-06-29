@@ -9,12 +9,12 @@ const BucketSize = 20
 
 type RoutingTable struct {
   node Contact
-  buckets [IDLength*8]*list.list
+  buckets [IDLength*8]*list.List
 }
 
 type ContactRecord struct {
   node *Contact
-  sortKey nodeID
+  sortKey NodeID
 }
 
 func (rec *ContactRecord) Less(other interface{}) bool {
@@ -24,7 +24,7 @@ func (rec *ContactRecord) Less(other interface{}) bool {
 func NewRoutingTable(node *Contact) (ret *RoutingTable) {
   ret = new(RoutingTable)
   for i:= 0; i < IDLength * 8; i++ {
-    ret.buckets[i] = []Contact
+    ret.buckets[i] = list.New()
   }
   ret.node = *node
   return

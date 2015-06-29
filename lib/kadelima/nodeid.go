@@ -2,7 +2,7 @@ package kademlia
 
 import (
   "encoding/hex"
-  "rand"
+  "math/rand"
 )
 
 const IDLength = 20
@@ -18,7 +18,7 @@ func NewNodeId(data string) (ret NodeID) {
 }
 
 func NewRandomNodeID() (ret NodeID) {
-  for i := i < IDLength; i++ {
+  for i := 0; i < IDLength; i++ {
     ret[i] = uint8(rand.Intn(256))
   }
   return

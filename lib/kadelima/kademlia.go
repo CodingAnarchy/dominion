@@ -4,10 +4,9 @@ import (
   "container/heap"
   "fmt"
   "log"
-  "http"
+  "net/http"
   "net"
-  "os"
-  "rpc"
+  "net/rpc"
   "sort"
 )
 
@@ -23,17 +22,17 @@ func NewKademlia(self *Contact, networkID string) (ret *Kademlia) {
   return
 }
 
-func (k* Kademlia) Serve() (err os.Error) {
+func (k* Kademlia) Serve() (err error) {
   rpc.Register(&KademliaCore{k})
 
   rpc.HandleHTTP()
-  if 1, err := net.Listen("tcp", k.routes.node.address); err == nil {
-    go http.Serve(1, nil)
+  if l, err := net.Listen("tcp", k.routes.node.address); err == nil {
+    go http.Serve(l, nil)
   }
   return
 }
 
-func (k *Kademlia) Call(contact *Contact, method string, args, reply interface{}) (err os.Error) {
+func (k *Kademlia) Call(contact *Contact, method string, args, reply interface{}) (err error) {
   if client, err := rpc.DialHTTP("tcp", contact.address); err == nil {
     err = client.Call(method, args, reply)
     if err == nil {
@@ -54,14 +53,30 @@ func (k *Kademlia) sendQuery(node *Contact, target NodeID, done chan []Contact) 
   }
 }
 
-func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret []ContactRecord]) {
+type ContactHeap []Contact
+
+func (c ContactHeap) Len() int           { return len(h) }
+func (c ContactHeap) Less(i, j int) bool { return c[i] < c[j] }
+func (c ContactHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (c *ContactHeap) Push(x interface{}) {
+  *c =append(*c, x.(*Contact))
+}
+
+func (c *ContactHeap) Pop() interface{} {
+  old := *c
+  n := len(old)
+  x := old[n-1]
+  *c = old[0:n-1]
+  return x
+}
+
+func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret []ContactRecord) {
   done := make(chan []Contact)
 
-  // A vector of *ContactRecord structs
-  ret = []ContactRecord
-
   // A heap of not-yet-queried *Contact structs
-  frontier := new(vector.Vector).Resize(0, BucketSize)
+  frontier := &ContactHeap{}
+  heap.Init(frontier)
 
   // A map of client values we've seen so far
   seen := make(map[string]bool)
@@ -113,7 +128,7 @@ type RPCHeader struct {
   NetworkID string
 }
 
-func (k *Kadelima) HandleRPC(request, response *RPCHeader) os.Error {
+func (k *Kadelima) HandleRPC(request, response *RPCHeader) error {
   if request.NetworkID != k.NetworkID {
     return os.NewError(fmt.Sprintf("Expected network ID %s, got %s",
                                     k.NetworkID, request.NetworkID))
@@ -137,7 +152,7 @@ type PingResponse struct {
   RPCHeader
 }
 
-func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err os.Error) {
+func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
     log.Stderr("Ping from %s\n", args.RPCHeader)
   }
@@ -154,7 +169,7 @@ type FindNodeResponse struct {
   contacts []Contact
 }
 
-func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeResponse) (err os.Error) {
+func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
     contacts := kc.kad.routes.FindClosest(args.target, BucketSize)
     response.contacts = make([]Contact, contacts.Len())
