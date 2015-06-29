@@ -9,7 +9,7 @@ const IDLength = 20
 
 type NodeID [IDLength]byte
 
-func NewNodeId(data string) (ret NodeID) {
+func NewNodeID(data string) (ret NodeID) {
   decoded, _ := hex.DecodeString(data)
   for i:= 0; i < IDLength; i++ {
     ret[i] = decoded[i]

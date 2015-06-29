@@ -72,7 +72,13 @@ func (c *ContactHeap) Pop() interface{} {
   return x
 }
 
-func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret []ContactRecord) {
+type ContactRecList []ContactRecord
+
+func (cr ContactRecList) Len() int            { return len(cr) }
+func (cr ContactRecList) Less(i, j int) bool  { return cr[i].Less(cr[j]) }
+func (cr ContactRecList) Swap(i, j int)       { cr[i], cr[j] = cr[j], cr[i] }
+
+func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecList) {
   done := make(chan []Contact)
 
   // A heap of not-yet-queried *Contact structs
@@ -155,7 +161,7 @@ type PingResponse struct {
 
 func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
-    log.Stderr("Ping from %s\n", args.RPCHeader)
+    log.Printf("Ping from %s\n", args.RPCHeader)
   }
   return
 }
@@ -176,7 +182,7 @@ func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeRespon
     response.contacts = make([]Contact, contacts.Len())
 
     for i := 0; i < contacts.Len(); i++ {
-      response.contacts[i] = *contacts.At(i).(*ContactRecord).node
+      response.contacts[i] = *contacts[i].node
     }
   }
   return
