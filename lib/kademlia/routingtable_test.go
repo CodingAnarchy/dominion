@@ -17,7 +17,7 @@ func TestRoutingTable(t *testing.T) {
     t.Errorf("Returned incorrect number - %d closest nodes.  Expected 1.", len(vec))
     return
   }
-  if vec[0].node.id.Equals(n3) {
+  if !vec[0].node.id.Equals(n3) {
     t.Error(vec[0])
   }
 

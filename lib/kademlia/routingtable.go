@@ -50,27 +50,29 @@ func (table *RoutingTable) Update(contact *Contact) {
   }
 }
 
-func copyToSlice(start, end *list.Element, slc []ContactRecord, target NodeID) {
-  for elt := start; elt != end; elt = elt.Next() {
-    contact := elt.Value.(*Contact)
-    slc = append(slc, ContactRecord{contact, contact.id.Xor(target)})
-  }
-}
-
 func (table *RoutingTable) FindClosest(target NodeID, count int) (ret ContactRecList) {
 
   bucket_num := target.Xor(table.node.id).PrefixLen()
   bucket := table.buckets[bucket_num]
-  copyToSlice(bucket.Front(), nil, ret, target)
+  for elt := bucket.Front(); elt != nil; elt = elt.Next() {
+    contact := elt.Value.(*Contact)
+    ret = append(ret, ContactRecord{contact, contact.id.Xor(target)})
+  }
 
   for i:= 1; (bucket_num-i >= 0 || bucket_num+i < IDLength * 8) && ret.Len() < count; i++ {
     if bucket_num - i >= 0 {
       bucket = table.buckets[bucket_num - i]
-      copyToSlice(bucket.Front(), nil, ret, target)
+      for elt := bucket.Front(); elt != nil; elt = elt.Next() {
+        contact := elt.Value.(*Contact)
+        ret = append(ret, ContactRecord{contact, contact.id.Xor(target)})
+      }
     }
     if bucket_num + i < IDLength * 8 {
       bucket = table.buckets[bucket_num + i]
-      copyToSlice(bucket.Front(), nil, ret, target)
+      for elt := bucket.Front(); elt != nil; elt = elt.Next() {
+        contact := elt.Value.(*Contact)
+        ret = append(ret, ContactRecord{contact, contact.id.Xor(target)})
+      }
     }
   }
 
