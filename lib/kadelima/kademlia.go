@@ -2,7 +2,6 @@ package kademlia
 
 import (
   "container/heap"
-  "container/vector"
   "fmt"
   "log"
   "http"
@@ -55,11 +54,11 @@ func (k *Kademlia) sendQuery(node *Contact, target NodeID, done chan []Contact) 
   }
 }
 
-func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret *vector.Vector) {
+func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret []ContactRecord]) {
   done := make(chan []Contact)
 
   // A vector of *ContactRecord structs
-  ret = new(vector.Vector).Resize(0, BucketSize)
+  ret = []ContactRecord
 
   // A heap of not-yet-queried *Contact structs
   frontier := new(vector.Vector).Resize(0, BucketSize)
@@ -70,8 +69,8 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret *vector.Vect
   // Initialize the return list, frontier heap, and seen list with local nodes
   for node := range k.routes.FindClosest(target, delta).Iter() {
     record := node.(*ContactRecord)
-    ret.Push(record)
-    heap.push(frontier, record.node)
+    ret = append(ret, record)
+    heap.Push(frontier, record.node)
     seen[record.node.id.String()] = true
   }
 
@@ -89,7 +88,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret *vector.Vect
     for _, node := range nodes {
       // If we haven't seen the node before, add it
       if _, ok := seen[node.id.String()]; ok == false {
-        ret.Push(&ContactRecord{&node, node.id.Xor(target)})
+        ret = append(ret, &ContactRecord{&node, node.id.Xor(target)})
         heap.Push(frontier, node)
         seen[node.id.String()] = true
       }
@@ -102,8 +101,8 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret *vector.Vect
   }
 
   sort.Sort(ret)
-  if ret.Len() > BucketSize {
-    ret.Cut(BucketSize, ret.Len())
+  if len(ret) > BucketSize {
+    ret = ret[:BucketSize]
   }
 
   return

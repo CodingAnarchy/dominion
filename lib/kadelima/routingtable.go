@@ -2,7 +2,6 @@ package kademlia
 
 import (
   "container/list"
-  "container/vector"
   "exp/iterable"
   "sort"
 )
@@ -49,34 +48,33 @@ func (table *RoutingTable) Update(contact *Contact) {
   }
 }
 
-func copyToVector(start, end *list.Element, vec *vector.Vector, target NodeID) {
+func copyToSlice(start, end *list.Element, slc []ContactRecord, target NodeID) {
   for elt := start; elt != end; elt = elt.Next() {
     contact := elt.Value.(*Contact)
-    vec.Push(&ContactRecord{contact, contact.id.Xor(target)})
+    slc = append(slc, &ContactRecord{contact, contact.id.Xor(target)})
   }
 }
 
-func (table *RoutingTable) FindClosest(target NodeID, count int) (ret *vector.Vector) {
-  ret = new(*vector.Vector).Resize(0, count)
+func (table *RoutingTable) FindClosest(target NodeID, count int) (ret []ContactRecord) {
 
   bucket_num := target.Xor(table.node.id).PrefixLen()
   bucket := table.buckets[bucket_num]
-  copyToVector(bucket.Front(), nil, ret, target)
+  copyToSlice(bucket.Front(), nil, ret, target)
 
   for i:= 1; (bucket_num-i >= 0 || bucket_num+i < IDLength * 8) && ret.Len() < count; i++ {
     if bucket_num - i >= 0 {
       bucket = table.buckets[bucket_num - i]
-      copyToVector(bucket.Front(), nil, ret, target)
+      copyToSlice(bucket.Front(), nil, ret, target)
     }
     if bucket_num + i < IDLength * 8 {
       bucket = table.buckets[bucket_num + i]
-      copyToVector(bucket.Front(), nil, ret, target)
+      copyToSlice(bucket.Front(), nil, ret, target)
     }
   }
 
   sort.Sort(ret)
   if ret.Len() > count {
-    ret.Cut(count, ret.Len())
+    ret = ret[:count]
   }
   return
 }
