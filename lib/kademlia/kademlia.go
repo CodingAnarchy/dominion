@@ -2,6 +2,7 @@ package kademlia
 
 import (
   "container/heap"
+  "container/list"
   "fmt"
   "log"
   "net/http"
@@ -23,6 +24,34 @@ func NewKademlia(self *Contact, networkID string) (ret *Kademlia) {
   return
 }
 
+func (k * Kademlia) Update(contact *Contact, table *RoutingTable) {
+  prefix_length := contact.id.Xor(table.node.id).PrefixLen()
+  bucket := table.buckets[prefix_length]
+  var elt *list.Element
+  for elt = bucket.Front(); elt != nil; elt = elt.Next() {
+    if elt.Value.(*Contact).id.Equals(table.node.id) {
+      break
+    }
+  }
+  if elt == nil {
+    if bucket.Len() <= BucketSize {
+      bucket.PushFront(contact)
+    } else {
+      // ping last seen node and handle for alive/dead
+      last := bucket.Back().Value.(*Contact)
+      if err:= k.sendPingQuery(last); err == nil {
+        // TODO: Add new element to replacement cache list
+      } else {
+        // Replace dead node with new live one
+        bucket.Remove(bucket.Back())
+        bucket.PushFront(contact)
+      }
+    }
+  } else {
+    bucket.MoveToFront(elt)
+  }
+}
+
 func (k* Kademlia) Serve() (err error) {
   rpc.Register(&KademliaCore{k})
 
@@ -37,9 +66,17 @@ func (k *Kademlia) Call(contact *Contact, method string, args, reply interface{}
   if client, err := rpc.DialHTTP("tcp", contact.address); err == nil {
     err = client.Call(method, args, reply)
     if err == nil {
-      k.routes.Update(contact)
+      k.Update(contact, k.routes)
     }
   }
+  return
+}
+
+func (k *Kademlia) sendPingQuery(node *Contact) (err error) {
+  args := PingRequest{RPCHeader{&k.routes.node, k.NetworkID}}
+  reply := PingResponse{}
+
+  err = k.Call(node, "KademliaCore.Ping", &args, &reply)
   return
 }
 
@@ -141,7 +178,7 @@ func (k *Kademlia) HandleRPC(request, response *RPCHeader) error {
                                    k.NetworkID, request.NetworkID))
   }
   if request.Sender != nil {
-    k.routes.Update(request.Sender)
+    k.Update(request.Sender, k.routes)
   }
   response.Sender = &k.routes.node
   return nil
