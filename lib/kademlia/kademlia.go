@@ -235,6 +235,15 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
   return
 }
 
+func (k *Kademlia) IterativeStore(domain string, typ string, ip net.IP) {
+  target := NewNodeID(domain)
+  for _, contact := range k.IterativeFindNode(target, 3) {
+    if err := k.sendStoreQuery(contact.node, domain, typ, ip); err != nil {
+      log.Printf("Error sending STORE query for %s to %s\n", domain, contact.node)
+    }
+  }
+}
+
 func (k *Kademlia) HandleRPC(request, response *RPCHeader) error {
   if request.NetworkID != k.NetworkID {
     return errors.New(fmt.Sprintf("Expected network ID %s, got %s",
