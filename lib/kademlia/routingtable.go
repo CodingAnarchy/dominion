@@ -42,9 +42,17 @@ func (table *RoutingTable) Update(contact *Contact) {
   if elt == nil {
     if bucket.Len() <= BucketSize {
       bucket.PushFront(contact)
+    } else {
+      /* ping last seen node and handle for alive/dead
+      last := bucket.Back().Value.(*Contact)
+      if k.sendPingQuery(last) {
+        // TODO: Add new element to replacement cache list
+      } else {
+        // Replace dead node with new live one
+        bucket.Remove(bucket.Back())
+        bucket.PushFront(contact)
+      } */
     }
-    // TODO: Handle insertion when the list is full by evicting old elements
-    // if they don't respond to a ping
   } else {
     bucket.MoveToFront(elt)
   }
