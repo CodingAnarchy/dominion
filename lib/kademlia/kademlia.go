@@ -165,6 +165,14 @@ func (k *Kademlia) sendFindNodeQuery(node *Contact, target NodeID, done chan []C
   }
 }
 
+func (k *Kademlia) sendStoreQuery(node *Contact, domain string, typ string, ip net.IP) (err error) {
+  args := StoreRequest{RPCHeader{&k.routes.node, k.NetworkID}, domain, typ, ip}
+  reply := StoreResponse{}
+
+  err = k.Call(node, "KademliaCore.Store", &args, &reply)
+  return
+}
+
 func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecList) {
   done := make(chan []Contact)
 
