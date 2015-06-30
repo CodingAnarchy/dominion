@@ -12,10 +12,69 @@ import (
   "errors"
 )
 
+// Core Kademlia structs
+
 type Kademlia struct {
   routes *RoutingTable
   NetworkID string
 }
+
+type KademliaCore struct {
+  kad *Kademlia
+}
+
+// RPC Request and Response structs
+
+type RPCHeader struct {
+  Sender *Contact
+  NetworkID string
+}
+
+type PingRequest struct {
+  RPCHeader
+}
+
+type PingResponse struct {
+  RPCHeader
+}
+
+type FindNodeRequest struct {
+  RPCHeader
+  target NodeID
+}
+
+type FindNodeResponse struct {
+  RPCHeader
+  contacts []Contact
+}
+
+// Data structures for internal use
+
+// ContactHeap
+type ContactHeap []Contact
+
+func (c ContactHeap) Len() int           { return len(c) }
+func (c ContactHeap) Less(i, j int) bool { return c[i].Less(c[j]) }
+func (c ContactHeap) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+
+func (c *ContactHeap) Push(x interface{}) {
+  *c =append(*c, x.(Contact))
+}
+
+func (c *ContactHeap) Pop() interface{} {
+  old := *c
+  n := len(old)
+  x := old[n-1]
+  *c = old[0:n-1]
+  return x
+}
+
+// ContactRecList
+type ContactRecList []*ContactRecord
+
+func (cr ContactRecList) Len() int            { return len(cr) }
+func (cr ContactRecList) Less(i, j int) bool  { return cr[i].Less(cr[j]) }
+func (cr ContactRecList) Swap(i, j int)       { cr[i], cr[j] = cr[j], cr[i] }
 
 func NewKademlia(self *Contact, networkID string) (ret *Kademlia) {
   ret = new(Kademlia)
@@ -40,7 +99,7 @@ func (k * Kademlia) Update(contact *Contact, table *RoutingTable) {
       // ping last seen node and handle for alive/dead
       last := bucket.Back().Value.(*Contact)
       if err:= k.sendPingQuery(last); err == nil {
-        // TODO: Add new element to replacement cache list
+        /* TODO: Add new element to replacement cache list */
       } else {
         // Replace dead node with new live one
         bucket.Remove(bucket.Back())
@@ -90,30 +149,6 @@ func (k *Kademlia) sendFindNodeQuery(node *Contact, target NodeID, done chan []C
     done <- []Contact{}
   }
 }
-
-type ContactHeap []Contact
-
-func (c ContactHeap) Len() int           { return len(c) }
-func (c ContactHeap) Less(i, j int) bool { return c[i].Less(c[j]) }
-func (c ContactHeap) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
-
-func (c *ContactHeap) Push(x interface{}) {
-  *c =append(*c, x.(Contact))
-}
-
-func (c *ContactHeap) Pop() interface{} {
-  old := *c
-  n := len(old)
-  x := old[n-1]
-  *c = old[0:n-1]
-  return x
-}
-
-type ContactRecList []*ContactRecord
-
-func (cr ContactRecList) Len() int            { return len(cr) }
-func (cr ContactRecList) Less(i, j int) bool  { return cr[i].Less(cr[j]) }
-func (cr ContactRecList) Swap(i, j int)       { cr[i], cr[j] = cr[j], cr[i] }
 
 func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecList) {
   done := make(chan []Contact)
@@ -167,11 +202,6 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
   return
 }
 
-type RPCHeader struct {
-  Sender *Contact
-  NetworkID string
-}
-
 func (k *Kademlia) HandleRPC(request, response *RPCHeader) error {
   if request.NetworkID != k.NetworkID {
     return errors.New(fmt.Sprintf("Expected network ID %s, got %s",
@@ -184,33 +214,11 @@ func (k *Kademlia) HandleRPC(request, response *RPCHeader) error {
   return nil
 }
 
-type KademliaCore struct {
-  kad *Kademlia
-}
-
-type PingRequest struct {
-  RPCHeader
-}
-
-type PingResponse struct {
-  RPCHeader
-}
-
 func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
     log.Printf("Ping from %s\n", args.RPCHeader)
   }
   return
-}
-
-type FindNodeRequest struct {
-  RPCHeader
-  target NodeID
-}
-
-type FindNodeResponse struct {
-  RPCHeader
-  contacts []Contact
 }
 
 func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeResponse) (err error) {
