@@ -17,6 +17,7 @@ import (
 type Kademlia struct {
   routes *RoutingTable
   NetworkID string
+  domainStore map[string]map[string]net.IP
 }
 
 type KademliaCore struct {
@@ -48,6 +49,17 @@ type FindNodeResponse struct {
   contacts []Contact
 }
 
+type StoreRequest struct {
+  RPCHeader
+  domain string
+  typ string
+  ip net.IP
+}
+
+type StoreResponse struct {
+  RPCHeader
+}
+
 // Data structures for internal use
 
 // ContactHeap
@@ -76,10 +88,13 @@ func (cr ContactRecList) Len() int            { return len(cr) }
 func (cr ContactRecList) Less(i, j int) bool  { return cr[i].Less(cr[j]) }
 func (cr ContactRecList) Swap(i, j int)       { cr[i], cr[j] = cr[j], cr[i] }
 
+// Kademlia functionality
+
 func NewKademlia(self *Contact, networkID string) (ret *Kademlia) {
   ret = new(Kademlia)
   ret.routes = NewRoutingTable(self)
   ret.NetworkID = networkID
+  ret.domainStore = make(map[string]map[string]net.IP)
   return
 }
 
@@ -229,6 +244,13 @@ func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeRespon
     for i := 0; i < contacts.Len(); i++ {
       response.contacts[i] = *contacts[i].node
     }
+  }
+  return
+}
+
+func (kc *KademliaCore) Store(args *StoreRequest, response *StoreResponse) (err error) {
+  if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
+    kc.kad.domainStore[args.domain][args.typ] = args.ip
   }
   return
 }
