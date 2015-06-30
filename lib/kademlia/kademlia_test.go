@@ -1,6 +1,9 @@
 package kademlia
 
-import "testing"
+import (
+  "net"
+  "testing"
+)
 
 func TestPing(t *testing.T) {
   me := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
@@ -8,11 +11,7 @@ func TestPing(t *testing.T) {
   k.Serve()
 
   someone := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
-  if err := k.Call(
-    &someone,
-    "KademliaCore.Ping",
-    &PingRequest{RPCHeader{&someone, k.NetworkID}},
-    &PingResponse{}); err != nil {
+  if err := k.sendPingQuery(&someone); err != nil {
     t.Error(err)
   }
 }
@@ -39,5 +38,19 @@ func TestFindNode(t *testing.T) {
 
   if len(response.contacts) != BucketSize {
     t.Fail()
+  }
+}
+
+func TestStore(t *testing.T) {
+  me := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
+  k := NewKademlia(&me, "test")
+
+  someone := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
+  if err := k.Call(
+    &someone,
+    "KademliaCore.Store",
+    &StoreRequest{RPCHeader{&someone, k.NetworkID}, "www.google.com", "A", net.ParseIP("74.125.224.72")},
+    &StoreResponse{}); err != nil {
+    t.Error(err)
   }
 }
