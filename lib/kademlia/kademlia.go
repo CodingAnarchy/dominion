@@ -43,7 +43,7 @@ func (k *Kademlia) Call(contact *Contact, method string, args, reply interface{}
   return
 }
 
-func (k *Kademlia) sendQuery(node *Contact, target NodeID, done chan []Contact) {
+func (k *Kademlia) sendFindNodeQuery(node *Contact, target NodeID, done chan []Contact) {
   args := FindNodeRequest{RPCHeader{&k.routes.node, k.NetworkID}, target}
   reply := FindNodeResponse{}
 
@@ -100,7 +100,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
   pending := 0
   for i := 0; i < delta && frontier.Len() > 0; i++ {
     pending++
-    go k.sendQuery(frontier.Pop().(*Contact), target, done)
+    go k.sendFindNodeQuery(frontier.Pop().(*Contact), target, done)
   }
 
   // Iteratively look for closer nodes
@@ -117,7 +117,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
     }
 
     for pending < delta && frontier.Len() > 0 {
-      go k.sendQuery(frontier.Pop().(*Contact), target, done)
+      go k.sendFindNodeQuery(frontier.Pop().(*Contact), target, done)
       pending++
     }
   }
