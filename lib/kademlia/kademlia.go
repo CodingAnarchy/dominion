@@ -39,6 +39,17 @@ type PingResponse struct {
   RPCHeader
 }
 
+type StoreRequest struct {
+  RPCHeader
+  domain string
+  typ string
+  ip net.IP
+}
+
+type StoreResponse struct {
+  RPCHeader
+}
+
 type FindNodeRequest struct {
   RPCHeader
   target NodeID
@@ -49,15 +60,14 @@ type FindNodeResponse struct {
   contacts []Contact
 }
 
-type StoreRequest struct {
+type FindValueRequest struct {
   RPCHeader
-  domain string
-  typ string
-  ip net.IP
+  target NodeID
 }
 
-type StoreResponse struct {
+type FindValueResponse struct {
   RPCHeader
+  contacts []Contact
 }
 
 // Data structures for internal use
@@ -244,6 +254,13 @@ func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err err
   return
 }
 
+func (kc *KademliaCore) Store(args *StoreRequest, response *StoreResponse) (err error) {
+  if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
+    kc.kad.domainStore[args.domain][args.typ] = args.ip
+  }
+  return
+}
+
 func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
     contacts := kc.kad.routes.FindClosest(args.target, BucketSize)
@@ -256,9 +273,15 @@ func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeRespon
   return
 }
 
-func (kc *KademliaCore) Store(args *StoreRequest, response *StoreResponse) (err error) {
+func (kc *KademliaCore) FindValue(args *FindValueRequest, response *FindValueResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
-    kc.kad.domainStore[args.domain][args.typ] = args.ip
+    // TODO: Handle case where
+    contacts := kc.kad.routes.FindClosest(args.target, BucketSize)
+    response.contacts = make([]Contact, contacts.Len())
+
+    for i := 0; i < contacts.Len(); i++ {
+      response.contacts[i] = *contacts[i].node
+    }
   }
   return
 }

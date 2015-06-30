@@ -44,13 +44,11 @@ func TestFindNode(t *testing.T) {
 func TestStore(t *testing.T) {
   me := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
   k := NewKademlia(&me, "test")
-
   someone := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
-  if err := k.Call(
-    &someone,
-    "KademliaCore.Store",
-    &StoreRequest{RPCHeader{&someone, k.NetworkID}, "www.google.com", "A", net.ParseIP("74.125.224.72")},
-    &StoreResponse{}); err != nil {
-    t.Error(err)
+  args := StoreRequest{RPCHeader{&someone, k.NetworkID}, "www.google.com", "A", net.ParseIP("74.125.224.72")}
+  response := StoreResponse{}
+
+  if err := k.Call(&someone, "KademliaCore.Store", &args, &response); err != nil {
+    t.Errorf("Error storing www.google.com on remote node %s: %s", someone, err)
   }
 }
