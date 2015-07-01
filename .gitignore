@@ -30,3 +30,13 @@
 
 # Debug files
 *.dSYM/
+
+# Go specific architecture files
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+*.test
+*.prof
