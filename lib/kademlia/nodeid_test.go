@@ -2,7 +2,7 @@ package kademlia
 
 import (
   "testing"
-  "fmt"
+  // "fmt"
 )
 
 func TestNodeID(t *testing.T) {
@@ -11,41 +11,26 @@ func TestNodeID(t *testing.T) {
   c := NodeID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  1,  1};
 
   if !a.Equals(a) {
-    t.Fail()
+    t.Errorf("%s not equal to itself!\n", a)
   }
   if a.Equals(b) {
-    t.Fail()
+    t.Errorf("%s equal to %s\n", a, b)
   }
 
   if !a.Xor(b).Equals(c) {
-    t.Error(a.Xor(b))
+    t.Errorf("%s should equal %s\n", a.Xor(b), c)
   }
 
   if c.PrefixLen() != 151 {
-    t.Error(c.PrefixLen())
+    t.Errorf("Expected prefix length of 151: obtained %d", c.PrefixLen())
   }
 
   if b.Less(a) {
-    t.Fail()
+    t.Errorf("Expected %s to not be less than %s", b, a)
   }
 
   str_id := "0123456789abcdef0123456789abcdef01234567";
   if NewNodeID(str_id).String() != str_id {
-    t.Error(NewNodeID(str_id).String());
+    t.Errorf("Did not properly translate as NodeID and return %s: obtained %s", str_id, NewNodeID(str_id).String());
   }
-}
-
-type Foo struct {
-  a int
-}
-
-func (f Foo) String() string {
-  return "foo"
-}
-
-type FmtWriter struct {}
-
-func (fw FmtWriter) Write(p []byte) (n int, err error) {
-  fmt.Printf("gob(%d): %x\n", len(p), p)
-  return len(p), nil
 }
