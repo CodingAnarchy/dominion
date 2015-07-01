@@ -30,6 +30,15 @@ func TestFindNode(t *testing.T) {
     }
   }
 
+  // Repeat test of ping to contacts within list to test
+  // update of node that already exists
+  for i, contact := range contacts {
+    if err := kc.Ping(&PingRequest{RPCHeader{&contact, k.NetworkID}},
+                      &PingResponse{}); err != nil {
+                      t.Errorf("Error testing repeat Ping %d: %s", i, err)
+    }
+  }
+
   args := FindNodeRequest{RPCHeader{&contacts[0], k.NetworkID}, contacts[0].id}
   response := FindNodeResponse{}
   if err := kc.FindNode(&args, &response); err != nil {
