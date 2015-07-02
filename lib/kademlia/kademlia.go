@@ -17,7 +17,7 @@ import (
 type Kademlia struct {
   routes *RoutingTable
   NetworkID string
-  domainStore map[string]map[string]net.IP
+  domains *DomainStore
 }
 
 type KademliaCore struct {
@@ -104,7 +104,7 @@ func NewKademlia(self *Contact, networkID string) (ret *Kademlia) {
   ret = new(Kademlia)
   ret.routes = NewRoutingTable(self)
   ret.NetworkID = networkID
-  ret.domainStore = make(map[string]map[string]net.IP)
+  ret.domains = NewDomainStore()
   return
 }
 
@@ -266,10 +266,7 @@ func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err err
 
 func (kc *KademliaCore) Store(args *StoreRequest, response *StoreResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
-    if kc.kad.domainStore[args.domain] == nil {
-      kc.kad.domainStore[args.domain] = make(map[string]net.IP)
-    }
-    kc.kad.domainStore[args.domain][args.typ] = args.ip
+    kc.kad.domains.StoreRecord(args.domain, args.typ, args.ip)
   }
   return
 }
