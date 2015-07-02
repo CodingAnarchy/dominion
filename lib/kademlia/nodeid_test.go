@@ -2,7 +2,6 @@ package kademlia
 
 import (
   "testing"
-  // "fmt"
 )
 
 func TestNodeID(t *testing.T) {
