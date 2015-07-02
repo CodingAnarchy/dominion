@@ -76,11 +76,11 @@ type FindValueResponse struct {
 type ContactHeap []Contact
 
 func (c ContactHeap) Len() int           { return len(c) }
-func (c ContactHeap) Less(i, j int) bool { return c[i].Less(c[j]) }
+func (c ContactHeap) Less(i, j int) bool { return c[i].Less(&c[j]) }
 func (c ContactHeap) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 
 func (c *ContactHeap) Push(x interface{}) {
-  *c =append(*c, x.(Contact))
+  *c = append(*c, x.(Contact))
 }
 
 func (c *ContactHeap) Pop() interface{} {
@@ -197,7 +197,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
   for _, node := range k.routes.FindClosest(target, delta) {
     record := node
     ret = append(ret, record)
-    heap.Push(frontier, record.node)
+    heap.Push(frontier, *record.node)
     seen[record.node.id.String()] = true
   }
 
@@ -205,7 +205,8 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
   pending := 0
   for i := 0; i < delta && frontier.Len() > 0; i++ {
     pending++
-    go k.sendFindNodeQuery(frontier.Pop().(*Contact), target, done)
+    node := frontier.Pop().(Contact)
+    go k.sendFindNodeQuery(&node, target, done)
   }
 
   // Iteratively look for closer nodes
