@@ -35,6 +35,10 @@ func TestNodeID(t *testing.T) {
     t.Errorf("Expected %s to not be less than %s", b, a)
   }
 
+  if !a.Less(b) {
+    t.Errorf("Expected %s to be less than %s", a, b)
+  }
+
   str_id := "0123456789abcdef0123456789abcdef01234567"
   if NewNodeID(str_id).String() != str_id {
     t.Errorf("Did not properly translate as NodeID and return %s: obtained %s", str_id, NewNodeID(str_id).String());
