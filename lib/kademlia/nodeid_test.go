@@ -35,8 +35,8 @@ func TestNodeID(t *testing.T) {
     t.Errorf("Expected %s to not be less than %s", b, a)
   }
 
-  if !a.Less(a) {
-    t.Errorf("Expected %s to be less than itself", a)
+  if a.Less(a) {
+    t.Errorf("Expected %s to not be less than itself", a)
   }
 
   str_id := "0123456789abcdef0123456789abcdef01234567"
