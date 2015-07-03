@@ -265,7 +265,7 @@ func (k *Kademlia) HandleRPC(request, response *RPCHeader) error {
 }
 
 func (kc *KademliaCore) Ping(args *PingRequest, response *PingResponse) (err error) {
-  if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil && args.RPCHeader.NetworkID != "test" {
+  if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
     log.Printf("Ping from %s\n", args.RPCHeader)
   }
   return
