@@ -237,10 +237,15 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
 }
 
 func (k *Kademlia) IterativeStore(domain string, typ string, ip net.IP) {
-  target := NewNodeID(domain)
-  for _, contact := range k.IterativeFindNode(target, 3) {
-    if err := k.sendStoreQuery(contact.node, domain, typ, ip); err != nil {
-      log.Printf("Error sending STORE query for %s to %s\n", domain, contact.node)
+  k.domains.StoreRecord(domain, typ, ip)  // Store new/updated data locally
+  domain_node := fmt.Sprintf("%x", domain)
+  target := NewNodeID(domain_node)
+  contacts := k.IterativeFindNode(target, 3)
+  for _, contact := range contacts {
+    if !contact.node.id.Equals(k.routes.node.id) {
+      if err := k.sendStoreQuery(contact.node, domain, typ, ip); err != nil {
+        log.Printf("Error sending STORE query for %s to %s\n", domain, contact.node)
+      }
     }
   }
 }

@@ -2,7 +2,14 @@ package kademlia
 
 import (
   "testing"
+  "fmt"
+  "strings"
 )
+
+func rightPad2Len(s string, pad string, overallLen int) string {
+  padCount := 1 + ((overallLen - len(pad))/len(pad))
+  return (s + strings.Repeat(pad, padCount))[:overallLen]
+}
 
 func TestNodeID(t *testing.T) {
   a := NodeID{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
@@ -28,8 +35,14 @@ func TestNodeID(t *testing.T) {
     t.Errorf("Expected %s to not be less than %s", b, a)
   }
 
-  str_id := "0123456789abcdef0123456789abcdef01234567";
+  str_id := "0123456789abcdef0123456789abcdef01234567"
   if NewNodeID(str_id).String() != str_id {
     t.Errorf("Did not properly translate as NodeID and return %s: obtained %s", str_id, NewNodeID(str_id).String());
+  }
+
+  domain_node := fmt.Sprintf("%x", "www.google.com")
+  if NewNodeID(domain_node).String() != rightPad2Len(domain_node, "0", 40) {
+    t.Errorf("Did not properly translate as NodeID and return %s: obtained %s",
+      rightPad2Len(domain_node, "0", 40), NewNodeID(domain_node).String());
   }
 }

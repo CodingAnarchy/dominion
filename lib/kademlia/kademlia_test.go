@@ -79,3 +79,20 @@ func TestIterativeFindNode(t *testing.T) {
     t.Errorf("Returned more than expected %d records: returned %d", BucketSize, len(contact_records))
   }
 }
+
+func TestIterativeStore(t *testing.T) {
+  me := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
+  k := NewKademlia(&me, "test")
+  kc := KademliaCore{k}
+
+  var contacts [100]Contact
+  for i := 0; i < len(contacts); i++ {
+    contacts[i] = Contact{NewRandomNodeID(), "127.0.0.1:8989"}
+    if err := kc.Ping(&PingRequest{RPCHeader{&contacts[i], k.NetworkID}},
+                      &PingResponse{}); err != nil {
+                      t.Errorf("Error on Ping %d: %s", i, err)
+    }
+  }
+
+  k.IterativeStore("www.google.com", "A", net.ParseIP("74.125.224.72"))
+}

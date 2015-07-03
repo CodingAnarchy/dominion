@@ -11,7 +11,11 @@ type NodeID [IDLength]byte
 
 func NewNodeID(data string) (ret NodeID) {
   decoded, _ := hex.DecodeString(data)
-  for i:= 0; i < IDLength; i++ {
+  length := IDLength
+  if len(decoded) < IDLength {
+    length = len(decoded)
+  }
+  for i:= 0; i < length; i++ {
     ret[i] = decoded[i]
   }
   return
