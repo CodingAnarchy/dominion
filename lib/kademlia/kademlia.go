@@ -113,8 +113,10 @@ func (k * Kademlia) Update(contact *Contact, table *RoutingTable) {
   bucket := table.buckets[prefix_length]
   var elt *list.Element
   for elt = bucket.Front(); elt != nil; elt = elt.Next() {
-    if elt.Value.(*Contact).id.Equals(table.node.id) {
+    if elt.Value.(*Contact).id.Equals(contact.id) {
       break
+    } else if elt.Value.(*Contact).id.Equals(table.node.id){
+      return
     }
   }
   if elt == nil {
