@@ -242,8 +242,7 @@ func (k *Kademlia) IterativeFindNode(target NodeID, delta int) (ret ContactRecLi
 
 func (k *Kademlia) IterativeStore(domain string, typ string, ip net.IP) {
   k.domains.StoreRecord(domain, typ, ip)  // Store new/updated data locally
-  domain_node := fmt.Sprintf("%x", domain)
-  target := NewNodeID(domain_node)
+  target := NewNodeID(fmt.Sprintf("%x", domain))
   contacts := k.IterativeFindNode(target, 3)
   for _, contact := range contacts {
     if !contact.node.id.Equals(k.routes.node.id) {
@@ -299,7 +298,8 @@ func (kc *KademliaCore) FindValue(args *FindValueRequest, response *FindValueRes
       response.ip = val
     } else {
       response.ip = nil
-      contacts := kc.kad.routes.FindClosest(args.target, BucketSize)
+      target := NewNodeID(fmt.Sprintf("%x", args.domain))
+      contacts := kc.kad.routes.FindClosest(target, BucketSize)
       for i := 0; i < contacts.Len(); i++ {
         response.contacts[i] = *contacts[i].node
       }
