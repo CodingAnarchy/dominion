@@ -18,3 +18,12 @@ func (d *DomainStore) StoreRecord(domain string, typ string, ip net.IP) {
   }
   d.data[domain][typ] = ip
 }
+
+func (d *DomainStore) Retrieve(domain string, typ string) (ip net.IP) {
+  if d.data[domain] == nil || d.data[domain][typ] == nil {
+    ip = nil
+  } else {
+    ip = d.data[domain][typ]
+  }
+  return
+}
