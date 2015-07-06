@@ -62,11 +62,13 @@ type FindNodeResponse struct {
 
 type FindValueRequest struct {
   RPCHeader
-  target NodeID
+  domain string
+  typ string
 }
 
 type FindValueResponse struct {
   RPCHeader
+  ip net.IP
   contacts []Contact
 }
 
@@ -292,11 +294,15 @@ func (kc *KademliaCore) FindNode(args *FindNodeRequest, response *FindNodeRespon
 
 func (kc *KademliaCore) FindValue(args *FindValueRequest, response *FindValueResponse) (err error) {
   if err = kc.kad.HandleRPC(&args.RPCHeader, &response.RPCHeader); err == nil {
-    contacts := kc.kad.routes.FindClosest(args.target, BucketSize)
-    response.contacts = make([]Contact, contacts.Len())
-
-    for i := 0; i < contacts.Len(); i++ {
-      response.contacts[i] = *contacts[i].node
+    val := kc.kad.domains.Retrieve(args.domain, args.typ)
+    if val != nil {
+      response.ip = val
+    } else {
+      response.ip = nil
+      contacts := kc.kad.routes.FindClosest(args.target, BucketSize)
+      for i := 0; i < contacts.Len(); i++ {
+        response.contacts[i] = *contacts[i].node
+      }
     }
   }
   return
