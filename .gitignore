@@ -40,3 +40,4 @@ _cgo_export.*
 
 *.test
 *.prof
+.imdone
