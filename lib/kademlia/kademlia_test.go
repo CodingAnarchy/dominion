@@ -8,7 +8,7 @@ import (
 func TestPing(t *testing.T) {
 	me := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
 	k := NewKademlia(&me, "test")
-	k.Serve()
+	k.serve()
 
 	someone := Contact{NewRandomNodeID(), "127.0.0.1:8989"}
 	if err := k.sendPingQuery(&someone); err != nil {
@@ -36,8 +36,8 @@ func TestFindNode(t *testing.T) {
 		t.Errorf("Error on finding nodes: %s", err)
 	}
 
-	if len(response.contacts) != BucketSize {
-		t.Errorf("Expected 'full' bucket of %d contacts: received %d", BucketSize, len(response.contacts))
+	if len(response.contacts) != bucketSize {
+		t.Errorf("Expected 'full' bucket of %d contacts: received %d", bucketSize, len(response.contacts))
 	}
 }
 
@@ -72,11 +72,11 @@ func TestIterativeFindNode(t *testing.T) {
 		}
 	}
 
-	var contactRecords ContactRecList
+	var contactRecords contactRecList
 
 	contactRecords = k.iterativeFindNode(contacts[0].id, 5)
-	if len(contactRecords) > BucketSize {
-		t.Errorf("Returned more than expected %d records: returned %d", BucketSize, len(contactRecords))
+	if len(contactRecords) > bucketSize {
+		t.Errorf("Returned more than expected %d records: returned %d", bucketSize, len(contactRecords))
 	}
 }
 

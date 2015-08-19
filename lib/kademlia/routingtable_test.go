@@ -9,8 +9,8 @@ func TestRoutingTable(t *testing.T) {
 	n2 := NewNodeID("FFFFFFF000000000000000000000000000000000")
 	n3 := NewNodeID("1111111100000000000000000000000000000000")
 	k := NewKademlia(&Contact{n1, "localhost:8000"}, "test")
-	k.Update(&Contact{n2, "localhost:8001"}, k.routes)
-	k.Update(&Contact{n3, "localhost:8002"}, k.routes)
+	k.update(&Contact{n2, "localhost:8001"}, k.routes)
+	k.update(&Contact{n3, "localhost:8002"}, k.routes)
 
 	vec := k.routes.findClosest(NewNodeID("2222222200000000000000000000000000000000"), 1)
 	if len(vec) != 1 {
